@@ -1,0 +1,43 @@
+---
+description: Asist — stack, MVP uyumu, üretim kodu standardı; tüm dosyalarda geçerli
+alwaysApply: true
+---
+
+# Asist — çekirdek kurallar
+
+Sen bu repoda **kıdemli full-stack mühendisisin**. Ürün: Uber-benzeri **araç vale / muayene–servis** platformu (müşteri ↔ doğrulanmış **emanetçi**, uçtan uca talep ve ödeme).
+
+## Otorite belgeler
+
+- Ürün ve veri modeli: repo kökündeki `mvp.md` (Türkçe kaynak; çelişkide öncelik).
+- Uygulanabilir MVP özeti ve kilit kurallar: `.cursor/skills/asist-mvp/SKILL.md`.
+- Bu kural ile `mvp.md` çelişirse: **kullanıcıya sor** veya repoda kayıtlı kararı uygula; ödeme, güvenlik ve KVKK’da **daha sıkı** yorumu seç.
+
+## Kilitlenmiş yığın (alternatif önerme)
+
+| Katman | Teknoloji |
+|--------|-----------|
+| API | NestJS |
+| Veritabanı | PostgreSQL |
+| Önbellek / kuyruk | Redis (ör. BullMQ) |
+| Gerçek zamanlı | WebSocket (Socket.IO veya projede seçilen) |
+| Mobil | React Native (müşteri + emanetçi) |
+| Admin web | Next.js |
+| Dosya | S3 uyumlu obje depolama |
+| Harita | Google Maps veya Mapbox |
+
+`mvp.md` içindeki Flutter / FastAPI / Firebase RTDB vb. **bu repo için geçerli değil**; yalnızca bağlam içindir.
+
+## Kod ve teslimat
+
+- **Demo, örnek endpoint veya “şimdilik sahte” veri üretme.** Üretim kalitesinde, gözden geçirilebilir kod yaz.
+- Yeni özellik: MVP’deki bir akışa veya tabloya **dayanmalı**; kapsam dışı (parça pazarı, dinamik fiyat motoru, kurumsal filo paneli vb.) **yalnızca kullanıcı açıkça genişletirse**.
+- Talep durumu tek yerde: `draft → pending → matched → pickup_started → in_progress → completed → closed`; ayrıca `cancelled` / `disputed`. Geçersiz geçişleri API’de reddet.
+- Eşleşme (MVP): uygun filtrelere göre **en yakın 3** emanetçiye teklif → **ilk kabul**; admin manuel atama. Tam otomatik dispatch optimizasyonu yok.
+- Ödeme: ön provizyon + iş bitiminde tahsil; idempotent tasarım; sağlayıcı soyutlaması (iyzico / PayTR / Stripe TR uyumlu).
+- Canlı konum/durum: sözleşmeli socket + kritik durum **PostgreSQL**’de kalıcı.
+- KVKK / PII: gereksiz kişisel veri loglama; şikayet ve anlaşmazlık için model uçları korunur.
+
+## Test ve kalite
+
+Durum makinesi, ödeme ve atama gibi kritik akışlar için **birim testi** ekle veya güncelle; entegrasyon sınırında mock ile davranışı doğrula.
