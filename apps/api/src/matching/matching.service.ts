@@ -16,6 +16,7 @@ import { UserRole } from '../domain/enums/user-role.enum';
 import { RequestStatus } from '../domain/enums/request-status.enum';
 import { RequestStateMachineService } from '../domain/request-state-machine.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
+import { NotificationService } from '../common/notification.service';
 
 @Injectable()
 export class MatchingService {
@@ -33,6 +34,7 @@ export class MatchingService {
     private readonly sm: RequestStateMachineService,
     private readonly dataSource: DataSource,
     private readonly realtime: RealtimeGateway,
+    private readonly notifications: NotificationService,
   ) {}
 
   async dispatch(currentUser: JwtUser, requestId: string, maxDistanceKm = 15) {
@@ -81,6 +83,20 @@ export class MatchingService {
       }),
     );
     const saved = await this.offersRepo.save(offers);
+
+    // Bildirim gönder
+    for (const off of saved) {
+      const agent = nearest.find(n => n.agent.id === off.agentId)?.agent;
+      if (agent?.userId) {
+        this.notifications.sendPushNotification(
+          agent.userId,
+          'Yeni İş Talebi! 🚗',
+          `${req.serviceType} hizmeti için yeni bir teklifiniz var.`,
+          { requestId: req.id, offerId: off.id }
+        );
+      }
+    }
+
     return {
       requestId: req.id,
       offeredAgentCount: saved.length,
@@ -150,6 +166,14 @@ export class MatchingService {
         status: RequestStatus.Matched,
         agentId: agent.id,
       });
+
+      this.notifications.sendPushNotification(
+        request.userId,
+        'Emanetçi Bulundu! ✨',
+        'İşleminiz için bir emanetçi atandı ve yola çıkmaya hazır.',
+        { requestId: request.id, status: RequestStatus.Matched }
+      );
+
       return { ok: true, requestId: request.id, agentId: agent.id };
     });
   }
@@ -257,6 +281,22 @@ export class MatchingService {
       requestId: request.id,
       status: toStatus,
     });
+
+    const bodyMap: Record<string, string> = {
+      [RequestStatus.PickupStarted]: 'Emanetçi aracınızı teslim almak için yola çıktı.',
+      [RequestStatus.InProgress]: 'Aracınızın işlemleri başlatıldı.',
+      [RequestStatus.Completed]: 'İşlem başarıyla tamamlandı, aracınız teslimata hazır!',
+    };
+
+    if (bodyMap[toStatus]) {
+      this.notifications.sendPushNotification(
+        request.userId,
+        'Görev Güncellemesi 🛠️',
+        bodyMap[toStatus],
+        { requestId: request.id, status: toStatus }
+      );
+    }
+
     return { ok: true, requestId: request.id, status: toStatus };
   }
 

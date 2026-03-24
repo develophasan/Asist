@@ -9,8 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@next/swc-wasm-nodejs": "^15.5.14",
-    "@next/swc-win32-x64-msvc": "^15.5.14",
     "next": "15.5.14",
     "react": "19.1.0",
     "react-dom": "19.1.0"

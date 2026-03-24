@@ -26,6 +26,10 @@ import { MatchingModule } from './matching/matching.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { AdminModule } from './admin/admin.module';
 import { PaymentsModule } from './payments/payments.module';
+import { ReviewsModule } from './reviews/reviews.module';
+import { DisputesModule } from './disputes/disputes.module';
+import { MediaModule } from './media/media.module';
+import { NotificationsModule } from './common/notifications.module';
 
 const entities = [
   User,
@@ -110,6 +114,10 @@ const queueImports = queueEnabled
     VehiclesModule,
     AdminModule,
     PaymentsModule,
+    ReviewsModule,
+    DisputesModule,
+    MediaModule,
+    NotificationsModule,
   ],
   providers: [...(dbEnabled ? [DatabaseInitService] : [])],
 })

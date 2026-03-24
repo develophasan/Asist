@@ -14,16 +14,9 @@
     "test:e2e:api": "npm run test:e2e -w api",
     "seed:api": "npm run seed -w api",
     "dev:admin": "npm run dev -w admin",
-    "build:admin": "npm run build -w admin",
-    "start:mobile:customer": "npm run start -w mobile-customer",
-    "start:mobile:agent": "npm run start -w mobile-agent"
+    "build:admin": "npm run build -w admin"
   },
   "engines": {
     "node": ">=20"
-  },
-  "dependencies": {
-    "@babel/core": "^7.28.0",
-    "@nestjs/common": "^11.1.17",
-    "@next/swc-wasm-nodejs": "^15.5.14"
   }
 }

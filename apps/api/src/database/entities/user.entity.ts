@@ -31,6 +31,9 @@ export class User {
   @Column({ type: 'decimal', precision: 3, scale: 2, nullable: true })
   ratingAvg!: string | null;
 
+  @Column({ type: 'varchar', length: 255, name: 'push_token', nullable: true })
+  pushToken!: string | null;
+
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   createdAt!: Date;
 

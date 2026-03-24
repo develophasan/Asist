@@ -10,6 +10,7 @@ import { compare, hash } from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
+import Redis from 'ioredis';
 import { User } from '../database/entities/user.entity';
 import { OtpCode } from '../database/entities/otp-code.entity';
 import { RequestOtpDto } from './dto/request-otp.dto';
@@ -20,19 +21,43 @@ import type { JwtUser } from './interfaces/jwt-user.interface';
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  private redis: Redis | null = null;
 
   constructor(
     @InjectRepository(User) private readonly usersRepo: Repository<User>,
     @InjectRepository(OtpCode) private readonly otpRepo: Repository<OtpCode>,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
-  ) {}
+  ) {
+    const queueMode = process.env.ASIST_QUEUE_MODE ?? 'off';
+    if (queueMode !== 'off') {
+      this.redis = new Redis({
+        host: config.get<string>('redis.host') ?? '127.0.0.1',
+        port: config.get<number>('redis.port') ?? 6379,
+        lazyConnect: true,
+      });
+    }
+  }
 
   async requestOtp(dto: RequestOtpDto): Promise<{
     expiresInSec: number;
     debugCode?: string;
   }> {
+    // Rate limiting: 1 dakikada max 3 istek (Redis varsa)
+    if (this.redis) {
+      await this.redis.connect().catch(() => {});
+      const key = `otp:rl:${dto.phone}`;
+      const count = await this.redis.incr(key);
+      if (count === 1) await this.redis.expire(key, 60);
+      if (count > 3) {
+        throw new BadRequestException(
+          'Too many OTP requests. Please wait 1 minute.',
+        );
+      }
+    }
+
     const ttlSec = this.config.get<number>('otp.ttlSec') ?? 180;
+
     const maxAttempts = this.config.get<number>('otp.maxAttempts') ?? 5;
     const code = this.generateOtpCode();
     const codeHash = await hash(code, 10);
