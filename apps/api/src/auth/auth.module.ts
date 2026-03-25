@@ -9,6 +9,7 @@ import { AuthService } from './auth.service';
 import { User } from '../database/entities/user.entity';
 import { OtpCode } from '../database/entities/otp-code.entity';
 import { JwtStrategy } from './jwt.strategy';
+import { NotificationsModule } from '../common/notifications.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { JwtStrategy } from './jwt.strategy';
       }),
     }),
     TypeOrmModule.forFeature([User, OtpCode]),
+    NotificationsModule,
   ],
   controllers: [AuthController, UsersController],
   providers: [AuthService, JwtStrategy],

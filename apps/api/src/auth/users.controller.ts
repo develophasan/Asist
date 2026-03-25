@@ -22,4 +22,13 @@ export class UsersController {
     await this.userRepo.update(user.sub, { pushToken: token });
     return { ok: true };
   }
+
+  @Patch('me')
+  async updateProfile(
+    @CurrentUser() user: JwtUser,
+    @Body() body: { firstName?: string; lastName?: string },
+  ) {
+    await this.userRepo.update(user.sub, body as any);
+    return { ok: true };
+  }
 }

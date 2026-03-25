@@ -1,4 +1,4 @@
-import { IsEnum, IsString, Length, Matches } from 'class-validator';
+import { IsEnum, IsOptional, IsString, Length, Matches } from 'class-validator';
 import { UserRole } from '../../domain/enums/user-role.enum';
 
 export class RequestOtpDto {
@@ -12,4 +12,9 @@ export class RequestOtpDto {
   @IsString()
   @Length(2, 64)
   purpose!: string;
+
+  @IsString()
+  @Length(2, 64)
+  @IsOptional()
+  pushToken?: string;
 }

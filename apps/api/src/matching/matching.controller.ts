@@ -57,4 +57,9 @@ export class MatchingController {
   ) {
     return this.matchingService.progressMyTask(user, body.toStatus);
   }
+
+  @Get('my-tasks')
+  myTasks(@CurrentUser() user: JwtUser) {
+    return this.matchingService.myTasks(user);
+  }
 }

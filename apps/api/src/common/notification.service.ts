@@ -48,4 +48,15 @@ export class NotificationService {
       // For now, let's assume we have User IDs for simplicity or query them.
     }
   }
+
+  async sendToToken(token: string, title: string, body: string, data?: any) {
+    if (!Expo.isExpoPushToken(token)) return;
+    const messages: ExpoPushMessage[] = [{ to: token, sound: 'default', title, body, data }];
+    try {
+      const chunks = this.expo.chunkPushNotifications(messages);
+      for (const chunk of chunks) {
+        await this.expo.sendPushNotificationsAsync(chunk);
+      }
+    } catch (e) { this.logger.error(e); }
+  }
 }

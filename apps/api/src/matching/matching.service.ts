@@ -300,6 +300,22 @@ export class MatchingService {
     return { ok: true, requestId: request.id, status: toStatus };
   }
 
+  async myTasks(currentUser: JwtUser) {
+    if (currentUser.role !== UserRole.Agent) {
+      throw new ForbiddenException('Only agents can view their tasks');
+    }
+    const agent = await this.agentsRepo.findOne({
+      where: { userId: currentUser.sub },
+    });
+    if (!agent) return [];
+
+    return this.assignmentsRepo.find({
+      where: { agentId: agent.id },
+      relations: ['request'],
+      order: { acceptedAt: 'DESC' },
+    });
+  }
+
   private haversineKm(
     lat1: number,
     lon1: number,

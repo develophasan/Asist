@@ -22,6 +22,12 @@ export class User {
   @Column({ type: 'varchar', length: 32, unique: true })
   phone!: string;
 
+  @Column({ type: 'varchar', length: 64, nullable: true, name: 'first_name' })
+  firstName!: string | null;
+
+  @Column({ type: 'varchar', length: 64, nullable: true, name: 'last_name' })
+  lastName!: string | null;
+
   @Column({ type: 'varchar', length: 255, name: 'refresh_token_hash', nullable: true })
   refreshTokenHash!: string | null;
 

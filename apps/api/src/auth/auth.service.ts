@@ -17,6 +17,7 @@ import { RequestOtpDto } from './dto/request-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { UserRole } from '../domain/enums/user-role.enum';
 import type { JwtUser } from './interfaces/jwt-user.interface';
+import { NotificationService } from '../common/notification.service';
 
 @Injectable()
 export class AuthService {
@@ -28,6 +29,7 @@ export class AuthService {
     @InjectRepository(OtpCode) private readonly otpRepo: Repository<OtpCode>,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    private readonly notifications: NotificationService,
   ) {
     const queueMode = process.env.ASIST_QUEUE_MODE ?? 'off';
     if (queueMode !== 'off') {
@@ -75,6 +77,28 @@ export class AuthService {
     );
     this.logger.debug(`OTP debug code (${dto.phone}): ${code}`);
     const exposeDebugCode = this.config.get<boolean>('otp.exposeDebugCode');
+
+    // Push OTP gönderimi (DTO'dan gelen veya DB'deki token)
+    const user = await this.usersRepo.findOne({ where: { phone: dto.phone } });
+    const targetToken = dto.pushToken || user?.pushToken;
+
+    if (targetToken) {
+      // NotificationService.sendPushNotification userId bekliyor.
+      // Eğer user yoksa (ilk kayıt), geçici bir yöntemle sadece token'a gönderelim.
+      if (user) {
+        await this.notifications.sendPushNotification(
+          user.id,
+          'Asist Giriş Kodu 🔑',
+          `Giriş kodunuz: ${code}`,
+          { code }
+        );
+      } else {
+        // NotificationService'e doğrudan token'a gönderim metodu ekleyebiliriz.
+        // Şimdilik debug code yeterli veya yeni bir metod:
+        await (this.notifications as any).sendToToken(targetToken, 'Asist Giriş Kodu 🔑', `Giriş kodunuz: ${code}`, { code });
+      }
+    }
+
     return exposeDebugCode ? { expiresInSec: ttlSec, debugCode: code } : { expiresInSec: ttlSec };
   }
 
